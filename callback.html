@@ -31,13 +31,23 @@ const p = new URLSearchParams(location.search);
 const code = p.get('code'), state = p.get('state'), err = p.get('error');
 const st = document.getElementById('status'), f = document.getElementById('fields');
 document.getElementById('fullurl').textContent = location.href;
+// query params go through textContent only (never innerHTML) to avoid reflected XSS
+function field(lab, value) {
+  const l = document.createElement('label'); l.textContent = lab;
+  const d = document.createElement('div'); d.className = 'val'; d.textContent = value;
+  f.append(l, d);
+}
+function setStatus(cls, strong, rest) {
+  st.textContent = '';
+  const s = document.createElement('span'); s.className = cls; s.textContent = strong;
+  st.append(s, rest ? ' ' + rest : '');
+}
 if (err) {
-  st.innerHTML = '<span class="err">Authorization failed: '+err+'</span>';
+  setStatus('err', 'Authorization failed: ' + err);
 } else if (code) {
-  st.innerHTML = '<span class="ok">✓ Authorized.</span> Copy the values below.';
-  f.innerHTML =
-    '<label>code</label><div class="val">'+code+'</div>'+
-    (state? '<label>state</label><div class="val">'+state+'</div>':'');
+  setStatus('ok', '✓ Authorized.', 'Copy the values below.');
+  field('code', code);
+  if (state) field('state', state);
 } else {
   st.textContent = 'No authorization code found in the URL.';
 }
